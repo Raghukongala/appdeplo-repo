@@ -22,6 +22,10 @@ def calculate():
         if b == 0:
             return jsonify({'error': 'Division by zero'}), 400
         result = a / b
+    elif op == '%':
+        if b == 0:
+            return jsonify({'error': 'Division by zero'}), 400
+        result = a % b
     else:
         return jsonify({'error': f'Unsupported operator: {op}'}), 400
 
