@@ -27,6 +27,10 @@ def calculate():
 
     return jsonify({'result': result})
 
+@app.route('/', methods=['GET'])
+def home():
+    return jsonify({'message': 'Welcome to Calculator API', 'version': '1.1'})
+
 @app.route('/health', methods=['GET'])
 def health():
     return jsonify({'status': 'ok'})
