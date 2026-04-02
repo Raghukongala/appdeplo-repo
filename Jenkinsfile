@@ -2,13 +2,14 @@ pipeline {
     agent any
 
     environment {
-        AWS_REGION      = "ap-south-1"
-        AWS_ACCOUNT_ID  = "957948932374"
-        ECR_REPO        = "myapp-dev-app"
-        IMAGE_TAG       = "v${BUILD_NUMBER}"
-        ECR_URI         = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO}"
-        ECS_CLUSTER     = "myapp-dev"
-        ECS_SERVICE     = "myapp-dev"
+        AWS_REGION     = "ap-south-1"
+        AWS_ACCOUNT_ID = "957948932374"
+        ECR_REPO       = "myapp-dev-app"
+        IMAGE_TAG      = "v${BUILD_NUMBER}"
+        ECR_URI        = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO}"
+        ECS_CLUSTER    = "myapp-dev"
+        ECS_SERVICE    = "myapp-dev"
+        ALB_URL        = "http://myapp-dev-alb-1786334768.ap-south-1.elb.amazonaws.com"
     }
 
     stages {
@@ -50,20 +51,38 @@ pipeline {
             }
         }
 
-        stage('Health Check') {
+        stage('Wait for ECS Stability') {
             steps {
-                sh 'sleep 30'
-                sh 'curl -f http://myapp-dev-alb-1786334768.ap-south-1.elb.amazonaws.com/health'
+                sh """
+                    aws ecs wait services-stable \
+                        --cluster ${ECS_CLUSTER} \
+                        --services ${ECS_SERVICE} \
+                        --region ${AWS_REGION}
+                """
+            }
+        }
+
+        stage('Smoke Test') {
+            steps {
+                sh """
+                    echo "Testing health endpoint..."
+                    curl -f ${ALB_URL}/health
+
+                    echo "Testing calculate endpoint..."
+                    curl -f -X POST ${ALB_URL}/calculate \
+                        -H 'Content-Type: application/json' \
+                        -d '{"a": 10, "b": 5, "operator": "+"}'
+                """
             }
         }
     }
 
     post {
         success {
-            echo "Deployed ${ECR_URI}:${IMAGE_TAG} successfully"
+            echo "Deployment successful - ${ALB_URL}"
         }
         failure {
-            echo "Deployment failed"
+            echo "Deployment failed - check logs"
         }
     }
 }
