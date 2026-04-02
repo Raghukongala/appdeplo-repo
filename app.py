@@ -5,7 +5,7 @@ app = Flask(__name__)
 APP_INFO = {
     "name": "TCS Calculator",
     "company": "Tata Consultancy Services",
-    "version": "2.0",
+    "version": "2.1",
     "description": "A simple calculator API built by TCS"
 }
 
