@@ -19,14 +19,14 @@ pipeline {
             steps {
                 sh 'docker stop tcs-calculator || true'
                 sh 'docker rm tcs-calculator || true'
-                sh 'docker run -d --name tcs-calculator -p 5000:5000 tcs-calculator:latest'
+                sh 'docker run -d --name tcs-calculator -p 8080:8080 tcs-calculator:latest'
             }
         }
 
         stage('Health Check') {
             steps {
                 sh 'sleep 5'
-                sh 'curl -f http://localhost:5000/health'
+                sh 'curl -f http://localhost:8080/health'
             }
         }
     }
